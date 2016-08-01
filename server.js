@@ -41,7 +41,6 @@ app.post('/todos', function (req, res) {
 	}
 
 	body.description = body.description.trim();
-
 	body.id = todoNextId++;
 
 	todos.push(body);
@@ -58,9 +57,40 @@ app.delete('/todos/:id', function (req, res) {
 		res.status(404).json({"error": "no todo found with that id"});
 	} else {
 		todos = _.without(todos, matchedTodo);
+		res.json(matchedTodo);
 	}
+});
+
+// PUT /todos/:id
+app.put('/todos/:id', function (req, res) {
+	var todoId = parseInt(req.params.id, 10);
+	var matchedTodo = _.findWhere(todos, {id: todoId});
+	var body = _.pick(req.body, 'description', 'completed');
+	var validAtttributes = {};
+
+	if (!matchedTodo) {
+		res.status(404).send();
+	}
+
+	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+		validAtttributes.completed = body.completed;
+	} else if (body.hasOwnProperty('completed')) {
+		// Bad
+		return res.status(400).send();
+	}
+
+	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+		validAtttributes.description = body.description;
+	} else if (body.hasOwnProperty('desription')) {
+		// Bad
+		return res.status(400).send();
+	}
+
+	_.extend(matchedTodo, validAtttributes);
+	res.json(matchedTodo);
 });
 
 app.listen(PORT, function() {
 	console.log('Express listening on port ' + PORT + '!');
 });
+
